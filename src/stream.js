@@ -1,5 +1,5 @@
 const { Readable, Writable } = require('stream');
-const LIB = require('../build/Release/node_srt.node');
+const { SRT } = require('../build/Release/node_srt.node');
 const debug = require('debug')('srt-stream');
 
 const CONNECTION_ACCEPT_POLLING_INTERVAL_MS = 50;
@@ -24,7 +24,7 @@ class SRTReadStream extends Readable {
   // Q: not better if port (mandatory) is before, and address is optional (default to "0.0.0.0")?
   constructor(address, port, opts) {
     super();
-    this.srt = new LIB.SRT();
+    this.srt = new SRT();
     this.socket = this.srt.createSocket();
     this.address = address;
     this.port = port;
@@ -43,13 +43,13 @@ class SRTReadStream extends Readable {
     this.srt.listen(this.socket, SOCKET_LISTEN_BACKLOG);
 
     const epid = this.srt.epollCreate();
-    this.srt.epollAddUsock(epid, this.socket, LIB.SRT.EPOLL_IN | LIB.SRT.EPOLL_ERR);
+    this.srt.epollAddUsock(epid, this.socket, SRT.EPOLL_IN | SRT.EPOLL_ERR);
 
     const interval = this._eventPollInterval = setInterval(() => {
       const events = this.srt.epollUWait(epid, EPOLLUWAIT_TIMEOUT_MS);
       events.forEach(event => {
         const status = this.srt.getSockState(event.socket);
-        if (status === LIB.SRT.SRTS_BROKEN || status === LIB.SRT.SRTS_NONEXIST || status === LIB.SRT.SRTS_CLOSED) {
+        if (status === SRT.SRTS_BROKEN || status === SRT.SRTS_NONEXIST || status === SRT.SRTS_CLOSED) {
           debug("Client disconnected with socket:", event.socket);
           this.srt.close(event.socket);
           this.push(null);
@@ -57,7 +57,7 @@ class SRTReadStream extends Readable {
         } else if (event.socket === this.socket) {
           const fhandle = this.srt.accept(this.socket);
           debug("New client connected with socket:", this.socket, "and fhandle:", fhandle);
-          this.srt.epollAddUsock(epid, fhandle, LIB.SRT.EPOLL_IN | LIB.SRT.EPOLL_ERR);
+          this.srt.epollAddUsock(epid, fhandle, SRT.EPOLL_IN | SRT.EPOLL_ERR);
           this.emit('readable');
         } else {
           debug("Data from client on fd:", event.socket);
@@ -155,7 +155,7 @@ class SRTReadStream extends Readable {
 class SRTWriteStream extends Writable {
   constructor(address, port, opts) {
     super();
-    this.srt = new LIB.SRT();
+    this.srt = new SRT();
     this.socket = this.srt.createSocket();
     this.address = address;
     this.port = port;
