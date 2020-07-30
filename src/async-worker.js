@@ -19,7 +19,14 @@ if (isMainThread) {
       throw new Error('Worker message needs `workId` property');
     }
     */
-    let result = libSRT[data.method].apply(libSRT, data.args);
+    let result;
+    try {
+      result = libSRT[data.method].apply(libSRT, data.args);
+    } catch(err) {
+      console.error(err);
+      parentPort.postMessage(err.message);
+      return;
+    }
     // TODO: see if we can do this using SharedArrayBuffer for example,
     //       or just leveraging Transferable objects capabilities ... ?
     // FIXME: Performance ... ?
