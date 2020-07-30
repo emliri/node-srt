@@ -148,7 +148,7 @@ class SRTReadStream extends Readable {
     this.srt.close(this.socket);
     this.fd = null;
     this._clearScheduledRead();
-    this.emit('close');
+    if (cb) cb(err);
   }
 }
 
