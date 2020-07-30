@@ -35,9 +35,14 @@ class AsyncSRT {
    */
   _onWorkerMessage(data) {
     const resolveTime = performance.now();
-    const {timestamp, result, workId} = data;
-
     const callback = this._workCbQueue.shift();
+
+    if (typeof data === 'string') {
+      console.error('AsyncSRT: Error from call into N-API binding:', data);
+      return;
+    }
+
+    const {timestamp, result, workId} = data;
     callback(result);
   }
 
@@ -91,7 +96,7 @@ class AsyncSRT {
       };
       if (useTimeout) {
         timeout = setTimeout(() => {
-          reject(new Error('Timeout exceeded while awaiting result from worker running native-addon module functions'));
+          reject(new Error(`Timeout exceeded while awaiting method result: SRT.${method}(${args.join(', ')});`));
           rejected = true;
         }, timeoutMs);
       }
