@@ -1,11 +1,10 @@
-const { Worker } = require('worker_threads');
-const path = require('path');
-const {performance} = require("perf_hooks");
+const { performance } = require("perf_hooks");
 
 const debug = require('debug')('srt-async');
 
 const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
-const { SRT } = require('../build/Release/node_srt.node');
+const { createAsyncWorker } = require('./async-worker-provider');
+const { SRT } = require('./srt');
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
@@ -23,11 +22,15 @@ class AsyncSRT {
    */
   static TimeoutMs = DEFAULT_PROMISE_TIMEOUT_MS;
 
-  constructor() {
+  /**
+   *
+   * @param {Function} workerFactory (Optional) A function returning the new Worker instance needed to construct this object. This is useful for app-side bundling purposes (see webpack "worker-loader"). The provider MUST return a new instance of a worker. Several Async API instances CAN NOT share the same Worker thread instance. By default, the worker will be created by a provider which will resolve the Worker path at runtime to load it (`async-worker.js`) from the actual source module (see `async-worker-provider.js`). Any other loader used with a bundler will be able to inject its own providing mechanism, which will allow the Worker to be loaded at runtime as part of bundled assets.
+   */
+  constructor(workerFactory = createAsyncWorker) {
 
     DEBUG && debug('Creating task-runner worker instance');
 
-    this._worker = new Worker(path.resolve(__dirname, './async-worker.js'));
+    this._worker = workerFactory();
     this._worker.on('message', this._onWorkerMessage.bind(this));
     /*
     this._workIdGen = 0;
