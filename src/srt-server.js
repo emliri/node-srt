@@ -1,4 +1,4 @@
-const { AsyncSRT } = require('./async');
+const { AsyncSRT } = require('./async-api');
 const { AsyncReaderWriter } = require('./async-reader-writer');
 const { SRT } = require('./srt');
 

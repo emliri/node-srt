@@ -1,6 +1,6 @@
 "use strict";
 
-const { AsyncSRT } = require('../src/async.js');
+const { AsyncSRT } = require('../src/async-api.js');
 
 const asyncSrt = new AsyncSRT();
 
