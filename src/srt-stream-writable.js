@@ -1,5 +1,5 @@
 const { Writable } = require('stream');
-const { SRT } = require('../build/Release/node_srt.node');
+const { SRT } = require('./srt');
 const debug = require('debug')('srt-write-stream');
 
 class SRTWriteStream extends Writable {

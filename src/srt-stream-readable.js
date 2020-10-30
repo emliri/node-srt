@@ -1,5 +1,5 @@
 const { Readable } = require('stream');
-const { SRT } = require('../build/Release/node_srt.node');
+const { SRT } = require('./srt');
 const debug = require('debug')('srt-read-stream');
 
 const CONNECTION_ACCEPT_POLLING_INTERVAL_MS = 50;

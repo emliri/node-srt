@@ -1,6 +1,6 @@
 const { AsyncSRT } = require('./async');
 const { AsyncReaderWriter } = require('./async-reader-writer');
-const { SRT } = require('../build/Release/node_srt.node');
+const { SRT } = require('./srt');
 
 const EventEmitter = require("events");
 const debug = require('debug')('srt-server');

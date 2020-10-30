@@ -1,9 +1,10 @@
-const { SRT } = require('./build/Release/node_srt.node');
+const { SRT } = require('./src/srt');
 const { AsyncSRT } = require('./src/async');
-const { SRTReadStream } = require('./src/srt-stream-readable.js');
-const { SRTWriteStream } = require('./src/srt-stream-writable.js');
+const { SRTReadStream } = require('./src/srt-stream-readable');
+const { SRTWriteStream } = require('./src/srt-stream-writable');
 const { SRTServer } = require('./src/srt-server');
 const { setSRTLoggingLevel } = require('./src/logging');
+const { createAsyncWorker, getAsyncWorkerPath } = require('./src/async-worker-provider');
 
 module.exports = {
   SRT,

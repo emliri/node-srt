@@ -1,4 +1,4 @@
-const {SRT} = require('../build/Release/node_srt.node');
+const { SRT } = require('./srt');
 
 let srt = null;
 

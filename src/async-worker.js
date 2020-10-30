@@ -4,7 +4,7 @@ const {
 
 const debug = require('debug')('srt-async-worker');
 
-const { SRT } = require('../build/Release/node_srt.node');
+const { SRT } = require('./srt');
 
 const { argsToString, traceCallToString, extractTransferListFromParams } = require('./async-helpers');
 
