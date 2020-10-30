@@ -1,6 +1,6 @@
 {
   "targets": [{
-    "target_name": "node_srt",
+    "target_name": "srt",
     "cflags!": [ "-fno-exceptions" ],
     "cflags_cc!": [ "-fno-exceptions" ],
     "sources": [
