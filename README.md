@@ -13,7 +13,11 @@ npm install --save @eyevinn/srt
 
 Installing from NPM downloads and builds SRT SDK and NodeJS addon for your operating system × architecture.
 
-## Prerequisities
+### macOS 10.15 Catalina
+
+- [How to fix "cannot link directly with dylib" on libcrypto](#macOS-Catalina-OpenSSL)
+
+## Prerequisites
 
 Please refer to build instructions for your OS of the [SRT project](https://github.com/Haivision/srt#requirements).
 
@@ -24,9 +28,15 @@ We will merely pull in an SRT codebase from a GIT repo here (that may be local o
 Everything we need on the NodeJS side of things (N-API, Gyp) gets installed via NPM,
 as you install this package.
 
-However, it is not provided with this any prerequisits of building libSRT itself (we only try to invoke the toolchain correctly, whichever it is, on your OS).
+However, it is not provided with this any dependencies of building libSRT itself (we only try to invoke the toolchain correctly, whichever it is, on your OS).
 
 As you install all of the prerequisites, or even build the library already in your environment, this package should work also likewise.
+
+### Windows dependencies
+
+For Windows it is a little different: We invoke `vcpkg` to fetch and build all of the dependencies (and therefore assume this to be already installed).
+
+We therefore refer to build instructions of SRT for all steps *prior* to invoking `vcpkg` that need to be performed here likewise: https://github.com/Haivision/srt/blob/master/docs/build-win.md#2-preparing-dependencies
 
 ## Example
 
@@ -106,7 +116,7 @@ or with promises:
       } else {
         throw new Error('SRT listen error: ' + result);
       }
-    });  
+    });
 ```
 
 ### High-performance read/write use-cases & server/multi-connection implementation
@@ -162,9 +172,33 @@ srt.connect(writeStream => {
 });
 ```
 
+### macOS Catalina & OpenSSL
+
+On macOS 10.15 (but not on prior versions), if your OpenSSL system install points to the one from the XCode SDK (which is usually the case), you will encounter:
+
+```
+ld: cannot link directly with dylib/framework, your binary is not an allowed client of /usr/lib/libcrypto.dylib for architecture x86_64
+```
+
+#### Fix
+
+Step 1) Install/Upgrade to latest OpenSSL: `brew install openssl` or `brew upgrade openssl` if already installed (or install any free-speech OpenSSL distro to your system somehow, using Homebrew here is an example).
+
+Step 2) Set in your environment: `export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"`. Adapt the path should it differ on your setup where your free-speech OpenSSL is installed.
+
+#### Explanation
+
+This is due to novel Apple policy for the usage of some of the developer libraries. You can therefore not use these libraries to link with this build.
+
+It is likely you have already an actual free distribution of OpenSSL installed, for example via Homebrew. Still in this case you may encounter this issue with v1.1, while with v1.0 (until a certain patch) it seems that the linkage performed by `brew` install actually prevails the one of the Apple binaries here. However, with v1.1, this is not the case anymore.
+
+Fixing this dependency by *downgrading* to an older implememtation is for obvious security concerns *not* recommendable.
+
+Our recommended fix here will simply have the SRT build system be pointed to where your non-Apple OpenSSL install lives, and use that.
+
 ## [Contributing](CONTRIBUTING.md)
 
-In addition to contributing code, you can help to triage issues. This can include reproducing bug reports, or asking for vital information such as version numbers or reproduction instructions. 
+In addition to contributing code, you can help to triage issues. This can include reproducing bug reports, or asking for vital information such as version numbers or reproduction instructions.
 
 ## License (MIT)
 
