@@ -12,6 +12,8 @@ export type WorkerFactory = WorkerProviderFunc & {
   overrideModuleScopeImpl(customFunc: WorkerProviderFunc)
 };
 
-export const createAsyncWorker: WorkerFactory;
+export const createSRTAsyncWorker: WorkerFactory;
 
-export function getAsyncWorkerPath(): string;
+export function getSRTAsyncWorkerPath(): string;
+
+export function isSRTInstalled(): boolean;
