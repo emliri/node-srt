@@ -4,16 +4,18 @@
   "description": "Nodejs bindings for Secure Reliable Transport SDK",
   "main": "index.js",
   "scripts": {
-    "install": "npm run build-srt && npm run rebuild",
-    "build-srt": "node scripts/build-srt-sdk.js",
-    "rebuild": "node-gyp rebuild",
-    "rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
-    "clean": "node-gyp clean",
-    "test": "jasmine",
-    "test-jest": "jest --runInBand --detectOpenHandles",
-    "lint": "eslint . --ext .js --ext .ts",
     "check-tsc": "tsc examples/srt.ts --outDir ./tsc-lib",
-    "postversion": "git push && git push --tags"
+    "build": "npm run build-lib && npm run build-gyp",
+    "build-gyp": "npm run gyp-clean && npm run gyp-rebuild",
+    "build-lib": "node scripts/build-srt-sdk.js",
+    "gyp-clean": "node-gyp clean",
+    "gyp-rebuild": "node-gyp rebuild",
+    "gyp-rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
+    "install": "npm run build",
+    "lint": "eslint . --ext .js --ext .ts",
+    "postversion": "git push && git push --tags",
+    "test": "jasmine",
+    "test-jest": "jest --runInBand --detectOpenHandles"
   },
   "repository": {
     "type": "git",
