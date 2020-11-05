@@ -19,7 +19,7 @@ const srtCheckout = env.NODE_SRT_CHECKOUT || SRT_CHECKOUT;
 
 const depsPath = path.join(__dirname, '../', 'deps');
 const srtSourcePath = path.join(depsPath, 'srt');
-const buildDir = path.join(depsPath, 'build'); // FIXME: name this srt-build (in case other deps come up)
+const buildDir = path.join(depsPath, 'build');
 const numCpus = os.cpus().length; // NOTE: not the actual physical cores amount btw, see https://www.npmjs.com/package/physical-cpu-count
 
 if (!fs.existsSync(depsPath)) {
