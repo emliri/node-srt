@@ -65,7 +65,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   const asyncSrtClient = new AsyncSRT();
 
   const [clientSideSocket] = await Promise.all([
-    asyncSrtClient.createSocket(), // we could also use the server-runner here. doesnt matter.
+    asyncSrtClient.createSocket(), // we could also use the servers async-api here. doesnt matter.
     asyncSrtServer.create().then(s => s.open())
   ]);
 

@@ -194,7 +194,7 @@ export class SRT {
   /**
    * @returns epid
    */
-  epollCreate(): number
+  epollCreate(): number | SRTResult.SRT_ERROR
 
   /**
    *

@@ -30,7 +30,7 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
         onError(result);
       }
     } else {
-      throw new Error('Got unexpected read-result')
+      throw new Error(`Got unexpected read-result: ${result}`)
     }
   }
   return chunks;
