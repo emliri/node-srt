@@ -10,10 +10,6 @@ const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
 const DEBUG = false;
 
-/*
-const WORK_ID_GEN_MOD = 0xFFF;
-*/
-
 class AsyncSRT {
 
   /**
@@ -32,11 +28,35 @@ class AsyncSRT {
 
     this._worker = workerFactory();
     this._worker.on('message', this._onWorkerMessage.bind(this));
-    /*
-    this._workIdGen = 0;
-    this._workCbMap = new Map();
-    */
     this._workCbQueue = [];
+
+    this._error = null;
+  }
+
+  /**
+   * Retrieve the Error for any failure result.
+   *
+   * Generally, to handle errors, the resulting return value needs to be checked,
+   * in most cases for being SRT_ERROR. Not by using any type of exception-catch.
+   *
+   * Meaning, also the promise will not get rejected for "normal" SRT failures,
+   * i.e try-catch-await will not throw on these methods (only if there is
+   * an unexpected error, but usually the async-API methods here don't need
+   * to expect errors thrown in normal ops and typical error handling).
+   *
+   * For example, typically the return value of the API call will be SRT_ERROR (-1).
+   * But we will not throw the exception on the API call (since the call returns
+   * with this error value).
+   *
+   * Instead, the error gets retrieved into this storage for each
+   * AsyncSRT instance, and can get retrieved on the user-side for any call
+   * that returned an error code. Very much like SRT does internally and
+   * on the native API.
+   *
+   * @returns {Error}
+   */
+  getError() {
+    return this._error;
   }
 
   /**
@@ -46,10 +66,17 @@ class AsyncSRT {
     const worker = this._worker;
     this._worker = null;
     if (this._workCbQueue.length !== 0) {
-      console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
+      DEBUG && console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
       this._workCbQueue.length = 0;
     }
     return worker.terminate();
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isDisposed() {
+    return !this._worker;
   }
 
   /**
@@ -60,20 +87,20 @@ class AsyncSRT {
     // not sure if there can still be message event
     // after calling terminate
     // but let's guard from that state anyway.
-    if (this._worker === null) return;
+    if (this.isDisposed()) return;
 
-    const resolveTime = performance.now();
+    //const resolveTime = performance.now();
     const callback = this._workCbQueue.shift();
 
     if (data.err) {
-      console.error('AsyncSRT: Error from task-runner:', data.err.message,
+      DEBUG && console.error('AsyncSRT: Error from task-runner:', data.err.message,
         '\n  Binding call:', traceCallToString(data.call.method, data.call.args),
         //'\n  Stacktrace:', data.err.stack
         );
-      return;
+      this._error = data.err;
     }
 
-    const {timestamp, result, workId} = data;
+    const {timestamp, result} = data;
     callback(result);
   }
 
@@ -84,20 +111,13 @@ class AsyncSRT {
    * @param {Function} callback
    */
   _postAsyncWork(method, args, callback) {
-    const timestamp = performance.now();
 
-    // not really needed atm,
-    // only if the worker spawns async jobs itself internally
-    // and thus the queuing order of jobs would not be preserved
-    // across here and the worker side.
-    /*
-    if (this._workCbMap.size >= WORK_ID_GEN_MOD - 1) {
-      throw new Error('Can`t post more async work: Too many awaited callbacks unanswered in queue');
-    }
-    const workId = this._workIdGen;
-    this._workIdGen = (this._workIdGen + 1) % WORK_ID_GEN_MOD;
-    this._workCbMap.set(workId, callback);
-    */
+    // we check here again because this gets called from
+    // a promise-executor (potentially in different tick than promise-creation).
+    if (this.isDisposed())
+      return Promise.reject(new Error("AsyncSRT._postAsyncWork: has already been dispose()'d"));
+
+    const timestamp = performance.now();
 
     DEBUG && debug('Sending call:', traceCallToString(method, args));
 
@@ -114,12 +134,19 @@ class AsyncSRT {
    * @param {Function} callback optional
    * @param {boolean} useTimeout
    * @param {number} timeoutMs
+   * @returns {Promise}
    */
   _createAsyncWorkPromise(method,
     args = [],
     callback = null,
     useTimeout = false,
     timeoutMs = AsyncSRT.TimeoutMs) {
+
+    if (this.isDisposed()) {
+      const err = new Error("AsyncSRT_createAsyncWorkPromise: has already been dispose()'d");
+      console.error(err);
+      return Promise.reject(err);
+    }
 
     return new Promise((resolve, reject) => {
       let timeout;
