@@ -148,7 +148,7 @@ class AsyncSRT {
 
   /**
    *
-   * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
+   * @param {boolean} sender default: `false`. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
   createSocket(sender = false, callback) {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
@@ -211,25 +211,25 @@ class AsyncSRT {
 
   /**
    *
-   * Pass a packet buffer to write to the socket.
+   * Pass message/buffer data to write to the socket
+   * (depending on `SRTO_MESSAGEAPI` socket-flag enabled).
    *
+   * When socket is in MessageAPI mode: (!)
    * The size of the buffer must not exceed the SRT payload MTU
-   * (usually 1316 bytes).
+   * (usually 1316 bytes). (Otherwise the call will resolve to SRT_ERROR.)
+   * When consuming from a larger piece of data,
+   * chunks written will therefore need to be slice copies of the source buffer
    *
-   * Otherwise the call will resolve to SRT_ERROR.
-   *
-   * A system-specific socket-message error message may show in logs as enabled
-   * where the error is thrown (on the binding call to the native SRT API),
-   * and in the async API internals as it gets propagated back from the task-runner).
+   * A (somewhat OS-specific) message/socket-error may show in logs as enabled
+   * where the error is thrown: on the binding call to the native SRT APIs,
+   * and in the async API internals as it gets propagated back from the task-runner.
    *
    * Note that any underlying data buffer passed in
    * will be *neutered* by our worker thread and
    * therefore become unusable (i.e go to detached state, `byteLengh === 0`)
    * for the calling thread of this method.
-   * When consuming from a larger piece of data,
-   * chunks written will need to be slice copies of the source buffer.
    *
-   * For a usage example, check the performance & smoke testbench.
+   * For a usage example, see client/server examples in tests.
    *
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
