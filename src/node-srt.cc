@@ -82,7 +82,7 @@ Napi::Value NodeSRT::CreateSocket(const Napi::CallbackInfo& info) {
     isSender = info[0].As<Napi::Boolean>();
   }
 
-  SRTSOCKET socket = srt_socket(AF_INET, SOCK_DGRAM, 0);
+  SRTSOCKET socket = srt_create_socket();
   if (socket == SRT_ERROR) {
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
@@ -125,12 +125,12 @@ Napi::Value NodeSRT::Listen(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Number backlog = info[1].As<Napi::Number>();
 
-  int result = srt_listen(socketValue, backlog);
+  int result = srt_listen(socketId, backlog);
   if (result == SRT_ERROR) {
-    srt_close(socketValue);
+    srt_close(socketId);
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
   }
@@ -141,7 +141,7 @@ Napi::Value NodeSRT::Connect(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::String host = info[1].As<Napi::String>();
   Napi::Number port = info[2].As<Napi::Number>();
 
@@ -152,9 +152,9 @@ Napi::Value NodeSRT::Connect(const Napi::CallbackInfo& info) {
 
   inet_pton(AF_INET, std::string(host).c_str(), &addr.sin_addr);
 
-  int result = srt_connect(socketValue, (struct sockaddr *)&addr, sizeof(addr));
+  int result = srt_connect(socketId, (struct sockaddr *)&addr, sizeof(addr));
   if (result == SRT_ERROR) {
-    srt_close(socketValue);
+    srt_close(socketId);
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
   }
@@ -165,20 +165,20 @@ Napi::Value NodeSRT::Accept(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
 
   sockaddr_in their_addr;
-  int addr_size;
+  int addr_size = sizeof (sockaddr_in);
 
-  int their_fd = srt_accept(socketValue, (struct sockaddr *)&their_addr, &addr_size);
+  int their_fd = srt_accept(socketId, (struct sockaddr *)&their_addr, &addr_size);
   if (their_fd == SRT_INVALID_SOCK) {
-    srt_close(socketValue);
-    socketValue = Napi::Number::New(env, SRT_INVALID_SOCK);
+    srt_close(socketId);
+    socketId = Napi::Number::New(env, SRT_INVALID_SOCK);
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
   }
-  srt_close(socketValue);
-  socketValue = Napi::Number::New(env, SRT_INVALID_SOCK);
+  srt_close(socketId);
+  socketId = Napi::Number::New(env, SRT_INVALID_SOCK);
   return Napi::Number::New(env, their_fd);
 }
 
@@ -186,8 +186,8 @@ Napi::Value NodeSRT::Close(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
-  int result = srt_close(socketValue);
+  Napi::Number socketId = info[0].As<Napi::Number>();
+  int result = srt_close(socketId);
   if (result == SRT_ERROR) {
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
@@ -199,7 +199,7 @@ Napi::Value NodeSRT::Read(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Number chunkSize = info[1].As<Napi::Number>();
 
   // Q: why not converting to `int` directly here?
@@ -207,7 +207,7 @@ Napi::Value NodeSRT::Read(const Napi::CallbackInfo& info) {
   uint8_t *buffer = (uint8_t *)malloc(bufferSize);
   memset(buffer, 0, bufferSize);
 
-  int nb = srt_recvmsg(socketValue, (char *)buffer, (int)bufferSize);
+  int nb = srt_recvmsg(socketId, (char *)buffer, (int)bufferSize);
   if (nb == SRT_ERROR) {
     string err(string("srt_recvmsg: ")
       + string(srt_getlasterror_str()));
@@ -226,12 +226,12 @@ Napi::Value NodeSRT::Write(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
 
   // Q: why not using char as data/template type?
   Napi::Buffer<uint8_t> chunk = info[1].As<Napi::Buffer<uint8_t>>();
 
-  int result = srt_sendmsg2(socketValue, (const char *)chunk.Data(), chunk.Length(), nullptr);
+  int result = srt_sendmsg2(socketId, (const char *)chunk.Data(), chunk.Length(), nullptr);
   if (result == SRT_ERROR) {
     string err(string("srt_sendmsg2: ")
       + string(srt_getlasterror_str()));
@@ -245,7 +245,7 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Number option = info[1].As<Napi::Number>();
   int result = SRT_ERROR;
 
@@ -253,7 +253,7 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
     Napi::Number value = info[2].As<Napi::Number>();
     int32_t optName = option;
     int optValue = value;
-    result = srt_setsockflag(socketValue, (SRT_SOCKOPT)optName, &optValue, sizeof(int));
+    result = srt_setsockflag(socketId, (SRT_SOCKOPT)optName, &optValue, sizeof(int));
     if (result == SRT_ERROR) {
       Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
       return Napi::Number::New(env, SRT_ERROR);
@@ -262,7 +262,7 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
     Napi::Boolean value = info[2].As<Napi::Boolean>();
     int32_t optName = option;
     bool optValue = value;
-    result = srt_setsockflag(socketValue, (SRT_SOCKOPT)optName, &optValue, sizeof(bool));
+    result = srt_setsockflag(socketId, (SRT_SOCKOPT)optName, &optValue, sizeof(bool));
     if (result == SRT_ERROR) {
       Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
       return Napi::Number::New(env, SRT_ERROR);
@@ -275,7 +275,7 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Number option = info[1].As<Napi::Number>();
 
   Napi::Value empty;
@@ -325,7 +325,7 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
     {
       int optValue;
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketId, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
@@ -338,7 +338,7 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
     {
       bool optValue;
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketId, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
@@ -347,7 +347,7 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
     {
       char optValue[512];
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketId, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
       returnVal = Napi::Value::From(env, std::string(optValue));
       break;
     }
@@ -367,8 +367,8 @@ Napi::Value NodeSRT::GetSockState(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Number socketValue = info[0].As<Napi::Number>();
-  return Napi::Number::New(env, srt_getsockstate(socketValue));
+  Napi::Number socketId = info[0].As<Napi::Number>();
+  return Napi::Number::New(env, srt_getsockstate(socketId));
 }
 
 Napi::Value NodeSRT::EpollCreate(const Napi::CallbackInfo& info) {
@@ -388,11 +388,11 @@ Napi::Value NodeSRT::EpollAddUsock(const Napi::CallbackInfo& info) {
   Napi::HandleScope scope(env);
 
   Napi::Number epidValue = info[0].As<Napi::Number>();
-  Napi::Number socketValue = info[1].As<Napi::Number>();
+  Napi::Number socketId = info[1].As<Napi::Number>();
   Napi::Number eventsValue = info[2].As<Napi::Number>();
 
   int events = eventsValue;
-  int result = srt_epoll_add_usock(epidValue, socketValue, &events);
+  int result = srt_epoll_add_usock(epidValue, socketId, &events);
   if (result == SRT_ERROR) {
     Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
@@ -442,10 +442,10 @@ Napi::Value NodeSRT::Stats(const Napi::CallbackInfo& info) {
   Napi::HandleScope scope(env);
 
   SRT_TRACEBSTATS stats;
-  Napi::Number socketValue = info[0].As<Napi::Number>();
+  Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Boolean clear = info[1].As<Napi::Boolean>();
 
-  if (srt_bstats(socketValue, &stats, clear) == SRT_ERROR) {
+  if (srt_bstats(socketId, &stats, clear) == SRT_ERROR) {
 		Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
 	}
@@ -530,7 +530,7 @@ Napi::Value NodeSRT::Stats(const Napi::CallbackInfo& info) {
   obj.Set("pktRcvFilterSupply", stats.pktRcvFilterSupply);
   obj.Set("pktRcvFilterLoss", stats.pktRcvFilterLoss);
   obj.Set("pktReorderTolerance", stats.pktReorderTolerance);
-  
+
   // Total
   obj.Set("pktSentUniqueTotal", stats.pktSentUniqueTotal);
   obj.Set("pktRecvUniqueTotal", stats.pktRecvUniqueTotal);
@@ -542,6 +542,6 @@ Napi::Value NodeSRT::Stats(const Napi::CallbackInfo& info) {
   obj.Set("pktRecvUnique", stats.pktRecvUnique);
   obj.Set("byteSentUnique", stats.byteSentUnique);
   obj.Set("byteRecvUnique", stats.byteRecvUnique);
-  
+
   return obj;
 }
