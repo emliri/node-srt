@@ -159,9 +159,3 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
 module.exports = {
   testTransmitClientToServerLoopback
 }
-
-setSRTLoggingLevel(7);
-
-testTransmitClientToServerLoopback(9000, () => {
-  console.log('done')
-});
