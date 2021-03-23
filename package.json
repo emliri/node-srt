@@ -15,7 +15,7 @@
     "lint": "eslint . --ext .js --ext .ts",
     "postversion": "git push && git push --tags",
     "test": "jasmine",
-    "test-jest": "jest --runInBand --detectOpenHandles"
+    "test-jest": "jest --detectOpenHandles"
   },
   "repository": {
     "type": "git",
