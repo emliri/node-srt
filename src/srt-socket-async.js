@@ -49,6 +49,13 @@ class SRTSocketAsync extends EventEmitter {
   }
 
   /**
+   * @returns {AsyncSRT}
+   */
+  get asyncSrt() {
+    return this._asyncSrt;
+  }
+
+  /**
    * Call this before `open`.
    * Call `setSocketFlags` after this.
    *
@@ -86,9 +93,10 @@ class SRTSocketAsync extends EventEmitter {
       await this._asyncSrt.close(this.socket);
       this._socket = null;
     }
-    if (this._asyncSrt !== null) {
-      await this._asyncSrt.dispose();
+    const asyncSrt = this._asyncSrt;
+    if (asyncSrt !== null) {
       this._asyncSrt = null;
+      await asyncSrt.dispose();
     }
     this.emit('disposed');
     this.removeAllListeners();
