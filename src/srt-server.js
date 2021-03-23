@@ -124,7 +124,7 @@ class SRTServerConnection extends EventEmitter {
     }
     this.fd = null;
     this.emit('closed', result);
-    this.off();
+    this.removeAllListeners();
     return result;
   }
 
