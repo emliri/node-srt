@@ -118,7 +118,10 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
         expect(sourceDataBuf.readInt8(i)).toEqual(receivedBuffer.readInt8(i));
       }
 
-      done();
+      asyncSrtServer.dispose().then(() => {
+        done();
+      });
+
     }
   }
 
