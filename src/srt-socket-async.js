@@ -91,7 +91,7 @@ class SRTSocketAsync extends EventEmitter {
       this._asyncSrt = null;
     }
     this.emit('disposed');
-    this.off();
+    this.removeAllListeners();
   }
 
   /**
