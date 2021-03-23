@@ -59,10 +59,10 @@ function run() {
       try {
         result = srtNapiObjw[data.method].apply(srtNapiObjw, data.args);
       } catch(err) {
-        console.error(
+        DEBUG && console.error(
           `Exception thrown by native binding call "${traceCallToString(data.method, data.args)}":`,
             err);
-        parentPort.postMessage({err, call: data});
+        parentPort.postMessage({err, call: data, result: SRT.ERROR});
         return;
       }
     }
