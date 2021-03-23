@@ -205,7 +205,7 @@ class SRTServer extends SRTSocketAsync {
   }
 
   open() {
-    return super.create();
+    return super.open();
   }
 
   /**
