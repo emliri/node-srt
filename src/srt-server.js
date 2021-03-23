@@ -12,7 +12,7 @@ const EPOLL_PERIOD_MS_DEFAULT = 0;
 
 const EPOLLUWAIT_TIMEOUT_MS = 0;
 
-const SOCKET_LISTEN_BACKLOG = 128;
+const SOCKET_LISTEN_BACKLOG_SIZE = 0xFFFF;
 
 /**
  * @emits data
@@ -174,6 +174,14 @@ class SRTServer extends SRTSocketAsync {
     this._epid = null;
     this._pollEventsTimer = null;
     this._connectionMap = {};
+
+    /**
+     * Needs to be set before calling `open` (any changes after it
+     * wont be considered i.e are effectless).
+     * @public
+     * @member {number}
+     */
+    this.backlogSize = SOCKET_LISTEN_BACKLOG_SIZE;
   }
 
   /**
@@ -190,6 +198,14 @@ class SRTServer extends SRTSocketAsync {
       this._pollEventsTimer = null;
     }
     super.dispose();
+  }
+
+  create() {
+    return super.create();
+  }
+
+  open() {
+    return super.create();
   }
 
   /**
@@ -218,7 +234,7 @@ class SRTServer extends SRTSocketAsync {
     if (result === SRT.ERROR) {
       throw new Error('SRT.bind() failed');
     }
-    result = await this._asyncSrt.listen(this.socket, SOCKET_LISTEN_BACKLOG);
+    result = await this._asyncSrt.listen(this.socket, SOCKET_LISTEN_BACKLOG_SIZE);
     if (result === SRT.ERROR) {
       throw new Error('SRT.listen() failed');
     }
