@@ -30,6 +30,9 @@
     "Stephan Hesse <stephan@emliri.com>"
   ],
   "license": "MIT",
+  "engines": {
+    "npm": "=7"
+  },
   "devDependencies": {
     "@types/jest": "^26.0.10",
     "@types/node": "^14.0.23",
