@@ -71,7 +71,7 @@ function build() {
       // for mapping Darwin <-> macOS releases
       // Catalina = Darwin v19
       if (darwinMajor >= 19) {
-        console.warn('Applying env-vars hack to fix Darwin issue linking libcrypto dylib. See https://github.com/Eyevinn/node-srt/issues/10', MACOS_10_15_LIBCRYPTO_CC_FLAGS_PKGCONF);
+        console.warn('Applying env-vars hack to fix Darwin issue linking libcrypto dylib (See https://github.com/Eyevinn/node-srt/issues/10):', MACOS_10_15_LIBCRYPTO_CC_FLAGS_PKGCONF);
         console.warn('This seems to address the most common case (user-opt installed, for example via Homebrew). If the above isn`t exactly what you want (you may use a different OpenSSL installation location, or a different library vendor alltogher), please modify the build-script.')
         Object.assign(env, MACOS_10_15_LIBCRYPTO_CC_FLAGS_PKGCONF);
       }
