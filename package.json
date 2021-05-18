@@ -7,7 +7,7 @@
     "check-tsc": "tsc examples/srt.ts --outDir ./tsc-lib",
     "build": "npm run build-lib && npm run build-gyp",
     "build-gyp": "npm run gyp-clean && npm run gyp-rebuild",
-    "build-lib": "node scripts/build-srt-sdk.js",
+    "build-lib": "node scripts/build-deps-srt.js",
     "gyp-clean": "node-gyp clean",
     "gyp-rebuild": "node-gyp rebuild",
     "gyp-rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
