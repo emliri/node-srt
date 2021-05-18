@@ -1,7 +1,7 @@
 {
   "name": "@eyevinn/srt",
   "version": "0.5.2",
-  "description": "Nodejs bindings for Secure Reliable Transport SDK",
+  "description": "NodeJS native add-on SDK for Secure Reliable Transport (libSRT)",
   "main": "index.js",
   "scripts": {
     "check-tsc": "tsc examples/srt.ts --outDir ./tsc-lib",
@@ -40,7 +40,8 @@
     "jest": "^26.4.1",
     "ts-jest": "^26.2.0",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.6",
+    "vparse": "^1.1.0"
   },
   "dependencies": {
     "debug": "^4.1.1",
